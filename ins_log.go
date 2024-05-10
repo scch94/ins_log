@@ -8,11 +8,14 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var logger = log.New(os.Stdout, "", 0)
-var microservice = "not_specified"
+var service = "not_specified"
 var logLevel = 6
+var utfi string = ""
 
 func StartLogger() {
 	logger.SetOutput(new(logWriter))
@@ -28,9 +31,11 @@ type logWriter struct {
 func (writer logWriter) Write(bytes []byte) (int, error) {
 	return fmt.Print(string(bytes))
 }
-
-func SetMicroservice(name string) {
-	microservice = name
+func GenerateUtfi() {
+	utfi = uuid.New().String()[24:]
+}
+func SetService(name string) {
+	service = name
 }
 
 func SetLevel(level string) {
@@ -84,15 +89,10 @@ func do_log(c context.Context, lineLevel int, msg string, params ...interface{})
 	if lineLevel > logLevel {
 		return
 	}
-	dateTime := time.Now().UTC().Format("2006-01-02 15:04:05.000")
-	tenantID := emptyStringIfNil(c.Value("TenantId"))
-	correlationID := emptyStringIfNil(c.Value("CorrelationId"))
-	traceId := emptyStringIfNil(c.Value("TraceId"))
-	spanId := emptyStringIfNil(c.Value("SpanId"))
-	sampled := emptyStringIfNil(c.Value("Sampled"))
+	dateTime := time.Now().Format("2006-01-02 15:04:05.000")
 	levelStr := levelToString(lineLevel)
 	msg = replaceCharacters(msg)
-	line := fmt.Sprintf("[%s] [%s] [%s] [%s] [%s] [%s] [%s] [%s] %s", dateTime, microservice, levelStr, tenantID, correlationID, traceId, spanId, sampled, msg)
+	line := fmt.Sprintf("[%s] [%s] [%s] [%s] %s", dateTime, service, levelStr, utfi, msg)
 	if len(params) == 0 {
 		logger.Print(line)
 	} else {
