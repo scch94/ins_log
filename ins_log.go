@@ -94,7 +94,7 @@ func do_log(c context.Context, lineLevel int, msg string, params ...interface{})
 	levelStr := levelToString(lineLevel)
 	msg = replaceCharacters(msg)
 	packageName := emptyStringIfNil(c.Value("packageName"))
-	line := fmt.Sprintf("[%s] [%s] [%s] [%s] [%s] [%s] %s", dateTime, service, utfi, levelStr, packageName, utfi, msg)
+	line := fmt.Sprintf("[%s] [%s] [%s] [%s] [%s] %s", dateTime, service, packageName, levelStr, utfi, msg)
 	if len(params) == 0 {
 		logger.Print(line)
 	} else {
