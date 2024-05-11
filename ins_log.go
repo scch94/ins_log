@@ -17,8 +17,8 @@ var service = "not_specified"
 var logLevel = 6
 var utfi string = ""
 
-func setUtfi(utfi string) {
-	utfi = utfi
+func SetUtfi(newutfi string) {
+	utfi = newutfi
 }
 func StartLogger() {
 	logger.SetOutput(new(logWriter))
