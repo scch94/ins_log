@@ -17,6 +17,9 @@ var service = "not_specified"
 var logLevel = 6
 var utfi string = ""
 
+func GetUtfi() string {
+	return utfi
+}
 func SetUtfi(newutfi string) {
 	utfi = newutfi
 }
