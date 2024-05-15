@@ -40,6 +40,10 @@ func (writer logWriter) Write(bytes []byte) (int, error) {
 func GenerateUtfi() {
 	utfi = uuid.New().String()[24:]
 }
+
+func GenerateAdditionalUtfi() string {
+	return uuid.New().String()[24:]
+}
 func SetService(name string) {
 	service = name
 }
