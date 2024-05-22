@@ -39,7 +39,7 @@ func (writer logWriter) Write(bytes []byte) (int, error) {
 	return fmt.Print(string(bytes))
 }
 
-func generateUTFI() string {
+func GenerateUTFI() string {
 	return uuid.New().String()[24:]
 }
 func SetService(name string) {
