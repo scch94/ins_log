@@ -15,14 +15,15 @@ import (
 var logger = log.New(os.Stdout, "", 0)
 var service = "not_specified"
 var logLevel = 6
-var utfi string = ""
 
-func GetUtfi() string {
-	return utfi
+func getUTFIFromContext(c context.Context) string {
+	// Obtener el UTFI del contexto
+	if utfI, ok := c.Value("UTFI").(string); ok {
+		return utfI
+	}
+	return ""
 }
-func SetUtfi(newutfi string) {
-	utfi = newutfi
-}
+
 func StartLogger() {
 	logger.SetOutput(new(logWriter))
 }
@@ -37,11 +38,8 @@ type logWriter struct {
 func (writer logWriter) Write(bytes []byte) (int, error) {
 	return fmt.Print(string(bytes))
 }
-func GenerateUtfi() {
-	utfi = uuid.New().String()[24:]
-}
 
-func GenerateAdditionalUtfi() string {
+func generateUTFI() string {
 	return uuid.New().String()[24:]
 }
 func SetService(name string) {
@@ -102,6 +100,7 @@ func do_log(c context.Context, lineLevel int, msg string, params ...interface{})
 
 	dateTime := time.Now().Format("2006-01-02 15:04:05.000")
 	levelStr := levelToString(lineLevel)
+	utfi := getUTFIFromContext(c)
 	msg = replaceCharacters(msg)
 	packageName := emptyStringIfNil(c.Value("packageName"))
 	line := fmt.Sprintf("[%s] [%s] [%s] [%s] [%s] %s", dateTime, service, packageName, levelStr, utfi, msg)
