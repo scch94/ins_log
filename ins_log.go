@@ -16,13 +16,10 @@ var logger = log.New(os.Stdout, "", 0)
 var service = "not_specified"
 var logLevel = 6
 
-func getUTFIFromContext(c context.Context) string {
-	// Obtener el UTFI del contexto
-	if utfI, ok := c.Value("UTFI").(string); ok {
-		return utfI
-	}
-	return ""
-}
+// Clave para almacenar y recuperar el UTFI en el contexto
+type contextKey string
+
+const utfIKey = contextKey("UTFI")
 
 func StartLogger() {
 	logger.SetOutput(new(logWriter))
@@ -42,6 +39,7 @@ func (writer logWriter) Write(bytes []byte) (int, error) {
 func GenerateUTFI() string {
 	return uuid.New().String()[24:]
 }
+
 func SetService(name string) {
 	service = name
 }
@@ -51,56 +49,56 @@ func SetLevel(level string) {
 }
 
 func Fatal(c context.Context, msg string) {
-	do_log(c, 1, msg)
+	doLog(c, 1, msg)
 }
 func Error(c context.Context, msg string) {
-	do_log(c, 2, msg)
+	doLog(c, 2, msg)
 }
 func Warn(c context.Context, msg string) {
-	do_log(c, 3, msg)
+	doLog(c, 3, msg)
 }
 func Info(c context.Context, msg string) {
-	do_log(c, 4, msg)
+	doLog(c, 4, msg)
 }
 func Debug(c context.Context, msg string) {
-	do_log(c, 5, msg)
+	doLog(c, 5, msg)
 }
 func Trace(c context.Context, msg string) {
-	do_log(c, 6, msg)
+	doLog(c, 6, msg)
 }
 func Print(c context.Context, msg string) {
-	do_log(c, 5, msg)
+	doLog(c, 5, msg)
 }
 func Fatalf(c context.Context, msg string, args ...interface{}) {
-	do_log(c, 1, msg, args...)
+	doLog(c, 1, msg, args...)
 }
 func Errorf(c context.Context, msg string, args ...interface{}) {
-	do_log(c, 2, msg, args...)
+	doLog(c, 2, msg, args...)
 }
 func Warnf(c context.Context, msg string, args ...interface{}) {
-	do_log(c, 3, msg, args...)
+	doLog(c, 3, msg, args...)
 }
 func Infof(c context.Context, msg string, args ...interface{}) {
-	do_log(c, 4, msg, args...)
+	doLog(c, 4, msg, args...)
 }
 func Debugf(c context.Context, msg string, args ...interface{}) {
-	do_log(c, 5, msg, args...)
+	doLog(c, 5, msg, args...)
 }
 func Tracef(c context.Context, msg string, args ...interface{}) {
-	do_log(c, 6, msg, args...)
+	doLog(c, 6, msg, args...)
 }
 func Printf(c context.Context, msg string, args ...interface{}) {
-	do_log(c, 5, msg, args...)
+	doLog(c, 5, msg, args...)
 }
 
-func do_log(c context.Context, lineLevel int, msg string, params ...interface{}) {
+func doLog(c context.Context, lineLevel int, msg string, params ...interface{}) {
 	if lineLevel > logLevel {
 		return
 	}
 
 	dateTime := time.Now().Format("2006-01-02 15:04:05.000")
 	levelStr := levelToString(lineLevel)
-	utfi := getUTFIFromContext(c)
+	utfi := GetUTFIFromContext(c)
 	msg = replaceCharacters(msg)
 	packageName := emptyStringIfNil(c.Value("packageName"))
 	line := fmt.Sprintf("[%s] [%s] [%s] [%s] [%s] %s", dateTime, service, packageName, levelStr, utfi, msg)
@@ -173,4 +171,16 @@ func levelToInt(level string) int {
 	default:
 		return 6
 	}
+}
+
+// Helper para agregar y obtener UTFI del contexto
+func SetUTFIInContext(ctx context.Context, utfI string) context.Context {
+	return context.WithValue(ctx, utfIKey, utfI)
+}
+
+func GetUTFIFromContext(c context.Context) string {
+	if utfI, ok := c.Value(utfIKey).(string); ok {
+		return utfI
+	}
+	return ""
 }
