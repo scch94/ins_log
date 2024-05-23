@@ -19,6 +19,7 @@ var logLevel = 6
 // Clave para almacenar y recuperar el UTFI en el contexto
 type contextKey string
 
+const packageKey = contextKey("packageName")
 const utfIKey = contextKey("UTFI")
 
 func StartLogger() {
@@ -100,7 +101,7 @@ func doLog(c context.Context, lineLevel int, msg string, params ...interface{}) 
 	levelStr := levelToString(lineLevel)
 	utfi := GetUTFIFromContext(c)
 	msg = replaceCharacters(msg)
-	packageName := emptyStringIfNil(c.Value("packageName"))
+	packageName := GetPackageNameFromContext(c)
 	line := fmt.Sprintf("[%s] [%s] [%s] [%s] [%s] %s", dateTime, service, packageName, levelStr, utfi, msg)
 	if len(params) == 0 {
 		logger.Print(line)
@@ -181,6 +182,18 @@ func SetUTFIInContext(ctx context.Context, utfI string) context.Context {
 func GetUTFIFromContext(c context.Context) string {
 	if utfI, ok := c.Value(utfIKey).(string); ok {
 		return utfI
+	}
+	return ""
+}
+
+// Helper para agregar y obtener packageName del contexto
+func SetPackageNameInContext(ctx context.Context, packageName string) context.Context {
+	return context.WithValue(ctx, packageKey, packageName)
+}
+
+func GetPackageNameFromContext(c context.Context) string {
+	if packageName, ok := c.Value(packageKey).(string); ok {
+		return packageName
 	}
 	return ""
 }
