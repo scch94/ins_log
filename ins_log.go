@@ -15,6 +15,8 @@ import (
 var logger = log.New(os.Stdout, "", 0)
 var service = "not_specified"
 var logLevel = 6
+var currentLogFile *os.File
+var currentLogFileName string
 
 // Clave para almacenar y recuperar el UTFI en el contexto
 type contextKey string
@@ -22,12 +24,29 @@ type contextKey string
 const packageKey = contextKey("packageName")
 const utfIKey = contextKey("UTFI")
 
-func StartLogger() {
-	logger.SetOutput(new(logWriter))
-}
+func StartLogger(logFileName string) error {
+	// Cierra el archivo de registro actual si existe
+	if currentLogFile != nil {
+		currentLogFile.Close()
+	}
 
+	// Abre el archivo de registro nuevo
+	file, err := os.OpenFile(logFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	currentLogFile = file
+	currentLogFileName = logFileName
+
+	logger = log.New(currentLogFile, "", 0)
+
+	// Inicia el monitoreo de cambio de hora
+	go monitorHourChange()
+
+	return nil
+}
 func StartLoggerWithWriter(w io.Writer) {
-	logger.SetOutput(w)
+	logger = log.New(w, "", 0)
 }
 
 type logWriter struct {
@@ -196,4 +215,36 @@ func GetPackageNameFromContext(c context.Context) string {
 		return packageName
 	}
 	return ""
+}
+
+func monitorHourChange() {
+	lastHour := time.Now().Hour()
+
+	for {
+		time.Sleep(time.Minute) // Check every minute
+
+		currentHour := time.Now().Hour()
+		if currentHour != lastHour {
+			// Cambio de hora detectado
+			lastHour = currentHour
+			renameLogFile()
+		}
+	}
+}
+
+func renameLogFile() {
+	if currentLogFile != nil {
+		currentLogFile.Close()
+	}
+
+	hour := time.Now().Format("2006_01_02_15")
+	newLogFileName := fmt.Sprintf("logfile_%s.log", hour)
+	file, err := os.OpenFile(newLogFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("Error al crear nuevo archivo de registro:", err)
+		return
+	}
+	currentLogFile = file
+	currentLogFileName = newLogFileName
+	logger.SetOutput(currentLogFile)
 }
